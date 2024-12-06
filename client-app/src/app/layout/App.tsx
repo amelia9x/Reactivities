@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import './styles.css'
-import { Button, Container } from 'semantic-ui-react'
+import { Container } from 'semantic-ui-react'
 import { Activity } from '../models/activity'
 import NavBar from './NavBar'
 import ActivityDashboard from '../../features/activities/dashboard/ActivityDashboard'
@@ -12,11 +12,11 @@ import { observer } from 'mobx-react-lite'
 
 function App() {
   const {activityStore} = useStore();
+  const { loadActivities } = activityStore
 
   const [activities, setActivities] = useState<Activity[]>([])
   const [selectedActivity, setSelectedActivity]= useState<Activity | undefined>(undefined)
   const [editMode, setEditMode] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -68,9 +68,9 @@ function App() {
 
   return (
     <Fragment>
-      <NavBar openForm={handleOpenForm}/>
+      <NavBar/>
       <Container style={{marginTop: '7em'}}>
-        <ActivityDashboard activities={activityStore.activities} selectedActivity={selectedActivity} selectActivity={selectActivityHandle} cancelSelectActivity={cancelSelectActivity} openForm={handleOpenForm} closeForm={handleCloseForm} editMode={editMode} createOrEdit={handleCreateOrEditForm} deleteActivity={handleDeleteActivity} submitting={submitting}/>
+        <ActivityDashboard activities={activityStore.activities} createOrEdit={handleCreateOrEditForm} deleteActivity={handleDeleteActivity} submitting={submitting}/>
       </Container>
     </Fragment>
   )
