@@ -1,10 +1,11 @@
-import { action, makeAutoObservable, makeObservable, observable } from "mobx"
+import { action, makeAutoObservable, makeObservable, observable, runInAction } from "mobx"
 import { Activity } from "../models/activity"
 import agent from "../api/agent"
+import {v4 as uuid} from 'uuid'
 
 export default class AcitivtyStore {
   activities: Activity[] = []
-  initialLoading: boolean = false
+  loading: boolean = false
   selectedActivity : Activity | undefined = undefined
   editMode = false
 
@@ -15,11 +16,22 @@ export default class AcitivtyStore {
   loadActivities = async () => {
     this.setInitialLoading(true)
     try {
-      let activities = await agent.Activities.list()
-      activities.forEach(activity => {
+      let result = await agent.Activities.list()
+      console.log("result", result)
+      // runInAction(() => {
+      //   result.forEach(activity => {
+      //     activity.date = activity.date.split("T")[0]
+      //     // this.activities.push(activity)
+      //     console.log("After", this.activities)
+      //   })
+      //   this.activities = result
+      // })
+
+      result.forEach(activity => {
         activity.date = activity.date.split("T")[0]
-        this.activities.push(activity)
+        console.log("After", this.activities)
       })
+      this.activities = result
     } catch (err) {
       console.log(err)
     } finally {
@@ -28,7 +40,7 @@ export default class AcitivtyStore {
   }
 
   setInitialLoading = (state: boolean) => {
-    this.initialLoading = state
+    this.loading = state
   }
 
   selectActivity = (id: string) => {
@@ -47,4 +59,48 @@ export default class AcitivtyStore {
   closeForm = () => {
     this.editMode = false
   }
+
+  createActivity = async (activity: Activity) => {
+    this.loading = true
+    activity.date = new Date(activity.date).toISOString()
+    activity.id = uuid()
+
+    try {
+      await agent.Activities.create(activity)
+      runInAction(() => {
+        this.activities = [...this.activities, activity]
+        this.editMode = false
+        this.selectedActivity = activity
+        this.loading = false
+      })
+    } catch (err) {
+      console.log(err)
+      runInAction(() => {
+        this.loading = false
+      })
+    }
+  }
+
+  editActivity = async (activity: Activity) => {
+    this.loading = true
+    activity.date = new Date(activity.date).toISOString()
+
+    try {
+      await agent.Activities.edit(activity)
+      runInAction(() => {
+        this.activities = [...this.activities.filter(x => x.id !== activity.id), activity]
+        // this.activities.filter(x => x.id !== activity.id)
+        // this.activities.push(activity)
+        this.editMode = false
+        this.selectedActivity = activity
+        this.loading = false
+      })
+    } catch (err) {
+      console.log(err)
+      runInAction(() => {
+        this.loading = false
+      })
+    }
+  }
+  
 }

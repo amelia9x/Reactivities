@@ -15,46 +15,11 @@ function App() {
   const { loadActivities } = activityStore
 
   const [activities, setActivities] = useState<Activity[]>([])
-  const [selectedActivity, setSelectedActivity]= useState<Activity | undefined>(undefined)
-  const [editMode, setEditMode] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     activityStore.loadActivities()
   }, [activityStore])
-
-  const selectActivityHandle = (id: string) => {
-    setSelectedActivity(activities.find(activity => activity.id === id));
-  }
-  const cancelSelectActivity = () => setSelectedActivity(undefined);
-  const handleOpenForm = (id?: string) => {
-    id ? setEditMode(true) : cancelSelectActivity()
-  }
-
-  const handleCloseForm = () => {
-    setEditMode(false)
-  }
-
-  const handleCreateOrEditForm = (activity: Activity) => {
-    setSubmitting(true)
-    activity.date = new Date(activity.date).toISOString()
-    if(activity.id) {
-      agent.Activities.edit(activity).then(() => {
-        setActivities([...activities.filter(x => x.id !== activity.id), activity])
-        setEditMode(false)
-        setSelectedActivity(activity)
-        setSubmitting(false)
-      })
-    } else {
-      activity.id = uuid()
-      agent.Activities.create(activity).then(() => {
-        setActivities([...activities, activity])
-        setEditMode(false)
-        setSelectedActivity(activity)
-        setSubmitting(false)
-      })
-    }
-  }
 
   const handleDeleteActivity = (id: string) => {
     setSubmitting(true)
@@ -64,13 +29,13 @@ function App() {
     })
   }
 
-  if(activityStore.initialLoading) return <LoadingComponent content='Loading app'/>
+  if(activityStore.loading) return <LoadingComponent content='Loading app'/>
 
   return (
     <Fragment>
       <NavBar/>
       <Container style={{marginTop: '7em'}}>
-        <ActivityDashboard activities={activityStore.activities} createOrEdit={handleCreateOrEditForm} deleteActivity={handleDeleteActivity} submitting={submitting}/>
+        <ActivityDashboard activities={activityStore.activities} deleteActivity={handleDeleteActivity}/>
       </Container>
     </Fragment>
   )

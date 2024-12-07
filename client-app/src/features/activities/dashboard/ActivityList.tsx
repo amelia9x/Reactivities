@@ -5,13 +5,12 @@ import { useStore } from "../../../app/stores/store"
 
 interface Props {
   activities: Activity[]
-  submitting: boolean
   deleteActivity: (id: string) => void
 }
 
-export default function ActivityList({ activities, submitting, deleteActivity } : Props) {
+export default function ActivityList({ activities, deleteActivity } : Props) {
   const { activityStore } = useStore()
-  const { selectActivity } = activityStore
+  const { selectActivity, loading } = activityStore
 
   const [target, setTarget] = useState("")
   const handleDeleteAction = (e: SyntheticEvent<HTMLButtonElement>, id: string) => {
@@ -33,7 +32,7 @@ export default function ActivityList({ activities, submitting, deleteActivity } 
               </Item.Description>
               <Item.Extra>
                 <Button onClick={() => selectActivity(activity.id)} floated="right" color="blue" content="View"/>
-                <Button loading={submitting && target === activity.id} 
+                <Button loading={loading && target === activity.id} 
                         name={activity.id}
                         onClick={(e) => 
                           handleDeleteAction(e, activity.id)} 
