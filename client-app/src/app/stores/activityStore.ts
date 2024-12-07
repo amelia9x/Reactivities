@@ -1,10 +1,11 @@
-import { action, makeAutoObservable, makeObservable, observable, runInAction } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 import { Activity } from "../models/activity"
 import agent from "../api/agent"
 import {v4 as uuid} from 'uuid'
 
 export default class AcitivtyStore {
   activities: Activity[] = []
+  initialLoading: boolean = false
   loading: boolean = false
   selectedActivity : Activity | undefined = undefined
   editMode = false
@@ -40,7 +41,7 @@ export default class AcitivtyStore {
   }
 
   setInitialLoading = (state: boolean) => {
-    this.loading = state
+    this.initialLoading = state
   }
 
   selectActivity = (id: string) => {
@@ -93,6 +94,23 @@ export default class AcitivtyStore {
         // this.activities.push(activity)
         this.editMode = false
         this.selectedActivity = activity
+        this.loading = false
+      })
+    } catch (err) {
+      console.log(err)
+      runInAction(() => {
+        this.loading = false
+      })
+    }
+  }
+
+  deleteActivity = async (id: string) => {
+    this.loading = true
+    try {
+      await agent.Activities.delete(id)
+      runInAction(() => {
+        this.activities = [...this.activities.filter(x => x.id !== id)]
+        if(this.selectedActivity?.id === id) this.cancelSelectedActivity()
         this.loading = false
       })
     } catch (err) {
