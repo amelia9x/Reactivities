@@ -20,6 +20,7 @@ export default class AcitivtyStore {
   }
 
   loadActivities = async () => {
+    this.setInitialLoading(true)
     try {
       let result = await agent.Activities.list()
 
@@ -40,8 +41,8 @@ export default class AcitivtyStore {
       this.setInitialLoading(true)
       try {
         activity = await agent.Activities.getActivity(id)
-        // this.selectedActivity = activity
         this.setActivity(activity)
+        this.selectedActivity = activity
         this.setInitialLoading(false)
       } catch (err) {
         console.log(err)
