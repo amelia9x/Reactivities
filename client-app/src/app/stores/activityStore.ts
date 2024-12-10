@@ -5,7 +5,7 @@ import {v4 as uuid} from 'uuid'
 
 export default class AcitivtyStore {
   activityRegistry: Map<string, Activity> = new Map()
-  initialLoading: boolean = true
+  initialLoading: boolean = false
   loading: boolean = false
   selectedActivity : Activity | undefined = undefined
   editMode = false
@@ -36,7 +36,10 @@ export default class AcitivtyStore {
 
   loadActivity = async (id: string) => {
     let activity = this.getActivity(id)
-    if(activity) this.selectedActivity = activity
+    if(activity) {
+      this.selectedActivity = activity
+      return activity
+    }
     else {
       this.setInitialLoading(true)
       try {
@@ -44,6 +47,7 @@ export default class AcitivtyStore {
         this.setActivity(activity)
         this.selectedActivity = activity
         this.setInitialLoading(false)
+        return activity
       } catch (err) {
         console.log(err)
         this.setInitialLoading(false)

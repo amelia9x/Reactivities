@@ -1,13 +1,20 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Button, Form, Segment } from "semantic-ui-react";
 import { useStore } from "../../../app/stores/store";
 import { observer } from "mobx-react-lite";
+import { useNavigate, useParams } from "react-router-dom";
+import { Activity } from "../../../app/models/activity";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
+import {v4 as uuid} from 'uuid';
 
 export default observer (function ActivityForm() {
   const {activityStore} = useStore()
-  const {selectedActivity, createActivity, editActivity, loading} = activityStore
+  const {createActivity, editActivity, loading, initialLoading, loadActivity} = activityStore
 
-  const initialActivity = selectedActivity ?? {
+  const {id} = useParams()
+  const navigate = useNavigate()
+
+  const [activity, setActivity] = useState<Activity>({
     id: "",
     title: "",
     date: "",
@@ -15,18 +22,27 @@ export default observer (function ActivityForm() {
     category: "",
     city: "",
     venue: "",
-  }
+  })
 
-  const [activity, setActivity] = useState(initialActivity)
+  useEffect(() => {
+    if(id) loadActivity(id).then((activity) => setActivity(activity!))
+  }, [id, loadActivity])
 
   const handleSubmit = () => {
-    activity?.id ? editActivity(activity) : createActivity(activity)
+    if(!activity.id) {
+      activity.id = uuid()
+      createActivity(activity).then(() => navigate(`/activities/${activity.id}`))
+    } else {
+      editActivity(activity).then(() => navigate(`/activities/${activity.id}`))
+    }
   }
 
   const handleInputChange = (event : ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const {name, value} = event.target
     setActivity({...activity, [name]: value})
   }
+
+  if(initialLoading) return <LoadingComponent content="Loading activity ..."/>
 
   return (
     <Segment clearing>
