@@ -16,8 +16,8 @@ namespace API.Controllers
         // }
 
         [HttpGet]
-        public async Task<ActionResult<List<Activity>>> GetActivities() {
-            return await Mediator.Send(new List.Query());
+        public async Task<IActionResult> GetActivities() {
+            return HandleResult(await Mediator.Send(new List.Query()));
         }
 
 
@@ -28,8 +28,7 @@ namespace API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> CreateActivity(Activity activity) {
-            await Mediator.Send(new Create.Command{Activity = activity});
-            return Ok();
+            return HandleResult(await Mediator.Send(new Create.Command{Activity = activity}));
         }
 
         [HttpPut("{id}")]
