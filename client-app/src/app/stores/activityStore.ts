@@ -2,6 +2,7 @@ import { makeAutoObservable, runInAction } from "mobx"
 import { Activity } from "../models/activity"
 import agent from "../api/agent"
 import {v4 as uuid} from 'uuid'
+import { format } from "date-fns"
 
 export default class AcitivtyStore {
   activityRegistry: Map<string, Activity> = new Map()
@@ -16,12 +17,13 @@ export default class AcitivtyStore {
 
   get activitiesByDate () {
     return Array.from(this.activityRegistry.values())
-      .sort((a: Activity, b: Activity) => Date.parse(a.date) - Date.parse(b.date))
+      .sort((a: Activity, b: Activity) => a.date!.getTime() - b.date!.getTime())
   }
 
   get groupedActivities() {
     return Object.entries(this.activitiesByDate.reduce((activities, activity) => {
-      let date = activity.date
+      // let date = activity.date!.toISOString().split("T")[0];
+      let date = format(activity.date!, 'dd MMM yyyy');
       activities[date] = activities[date] ? [...activities[date], activity] : [activity]
       return activities
     }, {} as {[key: string]: Activity[]}))
@@ -64,7 +66,7 @@ export default class AcitivtyStore {
   }
 
   private setActivity(activity: Activity) {
-    activity.date = activity.date.split("T")[0]
+    activity.date = new Date(activity.date!)
     this.activityRegistry.set(activity.id, activity)
   }
 
@@ -79,14 +81,14 @@ export default class AcitivtyStore {
 
   createActivity = async (activity: Activity) => {
     this.loading = true
-    activity.date = new Date(activity.date).toISOString()
+    // activity.date = new Date(activity.date).toISOString()
     activity.id = uuid()
 
     try {
       await agent.Activities.create(activity)
       runInAction(() => {
         // this.activities = [...this.activities, activity]
-        activity.date = activity.date.split("T")[0]
+        // activity.date = activity.date.split("T")[0]
         this.activityRegistry.set(activity.id, activity)
         this.editMode = false
         this.selectedActivity = activity
@@ -102,12 +104,12 @@ export default class AcitivtyStore {
 
   editActivity = async (activity: Activity) => {
     this.loading = true
-    activity.date = new Date(activity.date).toISOString()
+    // activity.date = activity.date.toISOString()
 
     try {
       await agent.Activities.edit(activity)
       runInAction(() => {
-        activity.date = activity.date.split("T")[0]
+        // activity.date = activity.date.split("T")[0]
         this.activityRegistry.set(activity.id, activity)
         this.editMode = false
         this.selectedActivity = activity
